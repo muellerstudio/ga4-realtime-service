@@ -37,8 +37,8 @@ const app = express();
 // We'll store the latest real-time data in memory
 let latestReport: any = null;
 
-// Poll interval (10 seconds)
-const POLL_INTERVAL_MS = 10_000;
+// Poll interval (2 minutes)
+const POLL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 
 // Add this near the top for debugging
 console.log('Initializing with:', {
@@ -51,29 +51,47 @@ console.log('Initializing with:', {
 // Function to query GA4 real-time data
 async function fetchGa4Realtime() {
   try {
-    const propertyId = `properties/${GA4_PROPERTY_ID.replace('properties/', '')}`;
-    console.log('Attempting to fetch data for property:', propertyId);
+    const formattedPropertyId = GA4_PROPERTY_ID.startsWith('properties/') 
+      ? GA4_PROPERTY_ID 
+      : `properties/${GA4_PROPERTY_ID}`;
     
     const [response] = await analyticsDataClient.runRealtimeReport({
-      property: propertyId,
+      property: formattedPropertyId,
       metrics: [
         { name: 'activeUsers' },
-        { name: 'screenPageViews' }  // Add another common metric
+        { name: 'screenPageViews' },
+        { name: 'eventCount' }
       ],
       dimensions: [
-        { name: 'unifiedScreenName' }  // This is more reliable than pageTitle
+        { name: 'unifiedScreenName' },
+        { name: 'deviceCategory' },
+        { name: 'country' },
+        { name: 'minutesAgo' }
       ],
+      minuteRanges: [
+        {
+          name: 'last_30_min',
+          startMinutesAgo: 29,
+          endMinutesAgo: 0
+        }
+      ]
     });
 
     latestReport = response;
     console.log(`Successfully fetched GA4 realtime data at ${new Date().toISOString()}`);
   } catch (error: any) {
-    console.error('Error fetching GA4 realtime data:', {
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      propertyId: GA4_PROPERTY_ID
-    });
+    if (error.code === 8) { // RESOURCE_EXHAUSTED
+      console.warn('Hit GA4 quota limit, will retry next interval', {
+        message: error.message,
+        nextRetry: new Date(Date.now() + POLL_INTERVAL_MS).toISOString()
+      });
+    } else {
+      console.error('Error fetching GA4 realtime data:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+    }
   }
 }
 
