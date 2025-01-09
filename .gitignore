@@ -1,0 +1,7 @@
+# Node modules
+node_modules/
+dist/
+
+# Env / secrets
+.env
+service_account.json
