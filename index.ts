@@ -37,8 +37,8 @@ const app = express();
 // We'll store the latest real-time data in memory
 let latestReport: any = null;
 
-// Poll interval (2 minutes)
-const POLL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+// Poll interval (4 minutes)
+const POLL_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes
 
 // Add this near the top for debugging
 console.log('Initializing with:', {
