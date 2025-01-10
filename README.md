@@ -4,7 +4,7 @@ A microservice that polls Google Analytics 4 (GA4) real-time data and exposes it
 
 ## Features
 
-- Polls GA4 real-time data every 4 minutes (to stay within quota limits)
+- Polls GA4 real-time data periodically 
 - Exposes real-time analytics via a REST API endpoint
 - Tracks multiple metrics including:
   - Active Users

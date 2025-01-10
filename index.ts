@@ -28,8 +28,9 @@ app.use(cors({
 // Store latest report in memory
 let latestReport: any = null;
 
-// Poll every 4 minutes to stay within quota
-const POLL_INTERVAL_MS = 4 * 60 * 1000;
+// Poll every 30 seconds
+const POLL_INTERVAL_SECONDS = 30;
+const POLL_INTERVAL_MS = POLL_INTERVAL_SECONDS * 1000;
 
 // Add validation
 if (!CLIENT_EMAIL || !PRIVATE_KEY || !GA4_PROPERTY_ID) {
@@ -61,12 +62,12 @@ async function fetchGa4Realtime() {
         { name: 'unifiedScreenName' },
         { name: 'deviceCategory' },
         { name: 'country' },
-        { name: 'minutesAgo' }
+        { name: 'city' }
       ],
       minuteRanges: [
         {
-          name: 'last_30_min',
-          startMinutesAgo: 29,
+          name: 'last_5_min',
+          startMinutesAgo: 5,
           endMinutesAgo: 0
         }
       ]
