@@ -30,10 +30,12 @@ let latestReport: any = null;
 let totalVisitors: number = 0;
 let totalVisitorsLastUpdated: Date | null = null;
 
-// Poll intervals
-const POLL_INTERVAL_SECONDS = 30;
+// Poll every 10 seconds for realtime data
+const POLL_INTERVAL_SECONDS = 10;
 const POLL_INTERVAL_MS = POLL_INTERVAL_SECONDS * 1000;
-const TOTAL_VISITORS_POLL_INTERVAL = 60 * 60 * 1000; // 1 hour
+
+// Poll every minute for total visitors
+const TOTAL_VISITORS_POLL_INTERVAL = 60 * 1000; // 1 minute
 
 // Add validation
 if (!CLIENT_EMAIL || !PRIVATE_KEY || !GA4_PROPERTY_ID) {
