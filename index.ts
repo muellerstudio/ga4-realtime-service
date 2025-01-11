@@ -25,12 +25,15 @@ app.use(cors({
   origin: 'https://listical.vercel.app'
 }));
 
-// Store latest report in memory
+// Store latest report and total visitors in memory
 let latestReport: any = null;
+let totalVisitors: number = 0;
+let totalVisitorsLastUpdated: Date | null = null;
 
-// Poll every 30 seconds
+// Poll intervals
 const POLL_INTERVAL_SECONDS = 30;
 const POLL_INTERVAL_MS = POLL_INTERVAL_SECONDS * 1000;
+const TOTAL_VISITORS_POLL_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 // Add validation
 if (!CLIENT_EMAIL || !PRIVATE_KEY || !GA4_PROPERTY_ID) {
@@ -80,18 +83,53 @@ async function fetchGa4Realtime() {
   }
 }
 
+async function fetchTotalVisitors() {
+  try {
+    const formattedPropertyId = GA4_PROPERTY_ID.startsWith('properties/') 
+      ? GA4_PROPERTY_ID 
+      : `properties/${GA4_PROPERTY_ID}`;
+    
+    const [response] = await analyticsDataClient.runReport({
+      property: formattedPropertyId,
+      dateRanges: [
+        {
+          startDate: '2020-01-01',
+          endDate: 'today'
+        }
+      ],
+      metrics: [
+        { name: 'totalUsers' }
+      ]
+    });
+
+    if (response.rows && response.rows[0]?.metricValues?.[0]?.value) {
+      totalVisitors = parseInt(response.rows[0].metricValues[0].value);
+      totalVisitorsLastUpdated = new Date();
+      console.log(`Successfully updated total visitors (${totalVisitors}) at ${totalVisitorsLastUpdated.toISOString()}`);
+    }
+  } catch (error: any) {
+    console.error('Error fetching total visitors:', error);
+  }
+}
+
 // Initial fetch
 fetchGa4Realtime();
+fetchTotalVisitors();
 
 // Schedule polling
 setInterval(fetchGa4Realtime, POLL_INTERVAL_MS);
+setInterval(fetchTotalVisitors, TOTAL_VISITORS_POLL_INTERVAL);
 
 // API endpoint
 app.get('/api/realtime', (_req, res) => {
   if (!latestReport) {
     res.status(503).json({ error: 'Data not yet available' });
   } else {
-    res.json(latestReport);
+    res.json({
+      ...latestReport,
+      totalVisitors,
+      totalVisitorsLastUpdated
+    });
   }
 });
 
