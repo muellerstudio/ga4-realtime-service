@@ -1,6 +1,6 @@
 # GA4 Realtime Service
 
-A microservice that polls Google Analytics 4 (GA4) real-time data and exposes it via a REST API endpoint. This service is designed to provide real-time analytics data for web applications, specifically configured to work with [listical.vercel.app](https://listical.vercel.app).
+A microservice that polls Google Analytics 4 (GA4) real-time data and exposes it via a REST API endpoint. This service is designed to provide real-time analytics data for web applications, specifically configured to work with [listical.site](https://listical.site).
 
 ## Features
 
