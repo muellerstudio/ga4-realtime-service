@@ -1,4 +1,4 @@
-import express, { RequestHandler } from 'express';
+import express, { Request, Response } from 'express';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -22,7 +22,7 @@ const analyticsDataClient = new BetaAnalyticsDataClient({
 
 const app = express();
 app.use(cors({
-  origin: 'https://listical.vercel.app'
+  origin: 'https://listical.site'
 }));
 
 // Store latest report and total visitors in memory
@@ -50,11 +50,16 @@ console.log('Initializing with:', {
   hasPrivateKey: !!PRIVATE_KEY
 });
 
+// --- New Helper Function ---
+function getFormattedPropertyId(): string {
+  return GA4_PROPERTY_ID.startsWith('properties/') 
+    ? GA4_PROPERTY_ID 
+    : `properties/${GA4_PROPERTY_ID}`;
+}
+
 async function fetchGa4Realtime() {
   try {
-    const formattedPropertyId = GA4_PROPERTY_ID.startsWith('properties/') 
-      ? GA4_PROPERTY_ID 
-      : `properties/${GA4_PROPERTY_ID}`;
+    const formattedPropertyId = getFormattedPropertyId();
     
     const [response] = await analyticsDataClient.runRealtimeReport({
       property: formattedPropertyId,
@@ -87,9 +92,7 @@ async function fetchGa4Realtime() {
 
 async function fetchTotalVisitors() {
   try {
-    const formattedPropertyId = GA4_PROPERTY_ID.startsWith('properties/') 
-      ? GA4_PROPERTY_ID 
-      : `properties/${GA4_PROPERTY_ID}`;
+    const formattedPropertyId = getFormattedPropertyId();
     
     const [response] = await analyticsDataClient.runReport({
       property: formattedPropertyId,
@@ -123,7 +126,7 @@ setInterval(fetchGa4Realtime, POLL_INTERVAL_MS);
 setInterval(fetchTotalVisitors, TOTAL_VISITORS_POLL_INTERVAL);
 
 // API endpoint
-app.get('/api/realtime', (_req, res) => {
+app.get('/api/realtime', (_req: Request, res: Response) => {
   if (!latestReport) {
     res.status(503).json({ error: 'Data not yet available' });
   } else {
